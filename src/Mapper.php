@@ -30,7 +30,22 @@ final class Mapper
     /**
      * @var Finder
      */
-    protected $finder;
+    private $finder;
+
+    /**
+     * @var array
+     */
+    private $inPathPatterns;
+
+    /**
+     * @var array
+     */
+    private $excludePathPatterns;
+
+    /**
+     * @var array
+     */
+    private $names;
 
     /**
      * @param Finder $finder
@@ -38,6 +53,19 @@ final class Mapper
     public function __construct(Finder $finder)
     {
         $this->finder = $finder;
+        $this->configure([], ['/tests/i'], '*.php');
+    }
+
+    /**
+     * @param array $inPathPatterns
+     * @param array $excludePathPatterns
+     * @param array $names
+     */
+    public function configure($inPathPatterns = array(), $excludePathPatterns = array(), $names = array())
+    {
+        $this->inPathPatterns = $inPathPatterns;
+        $this->excludePathPatterns = $excludePathPatterns;
+        $this->names = $names;
     }
 
     /**
@@ -52,9 +80,22 @@ final class Mapper
 
         $this->finder->files()
             ->ignoreUnreadableDirs()
-            ->in($paths)
-            ->notPath('/tests/i')
-            ->name('*.php');
+            ->in($paths);
+
+        foreach($this->excludePathPatterns as $exclude)
+        {
+            $this->finder->notPath($exclude);
+        }
+
+        foreach($this->inPathPatterns as $inPath)
+        {
+            $this->finder->path($inPath);
+        }
+
+        foreach($this->names as $name)
+        {
+            $this->finder->name($name);
+        }
 
         /** @var SplFileInfo $file */
         foreach ($this->finder as $file) {
